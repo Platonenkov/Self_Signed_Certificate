@@ -1,8 +1,11 @@
 ﻿using System;
+using System.IO;
+using System.Security.Cryptography.X509Certificates;
 
-namespace Self_Signed_Certificate
+namespace SignedCertificate
 {
-    public class CertificateOptions
+
+    public class CertificateOptions: CertificateOptionsBase
     {
         /// <summary>
         /// Генератор сертификата
@@ -17,24 +20,12 @@ namespace Self_Signed_Certificate
             string commonName,
             string fileName,
             string password,
-            int years = 1)
+            int years = 1) : base(commonName, password, years)
         {
-            CommonName = commonName;
-            if (string.IsNullOrEmpty(CommonName))
-            {
-                throw new ArgumentNullException(nameof(CommonName));
-            }
-
             PathToSave = pathToSave;
             if (string.IsNullOrEmpty(PathToSave))
             {
                 throw new ArgumentNullException(nameof(PathToSave));
-            }
-
-            Password = password;
-            if (string.IsNullOrEmpty(Password))
-            {
-                throw new ArgumentNullException(nameof(Password));
             }
 
             CertificateFileName = fileName;
@@ -43,20 +34,12 @@ namespace Self_Signed_Certificate
                 throw new ArgumentNullException(nameof(CertificateFileName));
             }
 
-            Years = years;
-            if (Years <= 0)
-            {
-                Years = 1;
-            }
         }
 
         #region Свойства
 
-        public string CommonName { get; }
         public string PathToSave { get; }
-        public string Password { get; }
         public string CertificateFileName { get; }
-        public int Years { get; }
 
         #endregion
 
@@ -66,6 +49,33 @@ namespace Self_Signed_Certificate
         public string FileNameCER => $"{CertificateFileName}.cer";
     }
 
+    public class CertificateOptionsBase
+    {
+        public CertificateOptionsBase(
+            string commonName,
+            string password = null,
+            int years = 1)
+        {
+            CommonName = commonName;
+            if (string.IsNullOrEmpty(CommonName))
+            {
+                throw new ArgumentNullException(nameof(CommonName));
+            }
+
+            Password = password;
+
+            Years = years;
+            if (Years <= 0)
+            {
+                Years = 1;
+            }
+
+        }
+        public string CommonName { get; protected set; }
+        public string Password { get; protected set; }
+        public int Years { get; protected set; }
+    }
+
     public static class CertificateOptionsExtensions
     {
         /// <summary>
@@ -73,6 +83,16 @@ namespace Self_Signed_Certificate
         /// </summary>
         /// <param name="options">настройки</param>
         public static void MakeCert(this CertificateOptions options) => Certificate.MakeCert(options);
+        /// <summary>
+        /// Создать сертификат
+        /// </summary>
+        /// <param name="options">настройки</param>
+        public static X509Certificate2 CreateCertificate(this CertificateOptions options) => Certificate.CreateCertificate(options);
+        /// <summary>
+        /// Создать сертификат
+        /// </summary>
+        /// <param name="options">настройки</param>
+        public static X509Certificate2 CreateCertificate(this CertificateOptionsBase options) => Certificate.CreateCertificate(options);
 
     }
 

@@ -6,4 +6,8 @@
     <RootNamespace>Self_Signed_Certificate</RootNamespace>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\SignedCertificate\SignedCertificate.csproj" />
+  </ItemGroup>
+
 </Project>
