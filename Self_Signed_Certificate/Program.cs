@@ -7,38 +7,62 @@ namespace Self_Signed_Certificate
 {
     class Program
     {
+        private static string _DefaultDirectory => Path.Combine(Environment.CurrentDirectory, "Result");
+        private static string _DefaultName => "SelfSignedCertificate";
+        private static string _DefaultFileName => "SelfSignedCertificate";
+        private static string _DefaultPassword => "P@55w0rd";
+        private static int _DefaultYears => 5;
         // enable nullable
         public static void Main(string[] args)
         {
+            //args = new[] {"-s D:\Temp -n Cert -f my_new_certificate -p 123qwe"};
             Console.WriteLine("Read arguments");
-            var settings_row = args.Length > 0 ? args.Aggregate((current, s) => current + s) : string.Empty;
+            var settings_row = args.Length > 0 ? args.Aggregate((current, s) => current + $" {s}") : string.Empty;
             var settings = string.IsNullOrWhiteSpace(settings_row)
                 ? new Dictionary<string, string>()
-                : settings_row.Split('-').Select(r => r.Trim()).ToDictionary(k => k.Split(' ')[0], v => v.Split(' ')[1]);
+                : settings_row.Trim().Trim('-').Split('-')
+                   .Select(r => r.Trim()).ToDictionary(k => k.Split(' ')[0], v =>
+                    {
+                        try
+                        {
+                            return v.Split(' ')[1];
+                        }
+                        catch (IndexOutOfRangeException )
+                        {
+                            return null;
+                        }
+                        
+                    });
 
-            var has_pathToSave = settings.ContainsKey("s");
-            var pathToSave = has_pathToSave ? settings["s"] : Path.Combine(Environment.CurrentDirectory, "Result");
+            if (settings.ContainsKey("h") || settings.ContainsKey("help"))
+            {
+                Help();
+
+            }
+            settings.TryGetValue("s", out var pathToSave);
+            pathToSave ??= _DefaultDirectory;
+
             if (!Directory.Exists(pathToSave))
                 Directory.CreateDirectory(pathToSave);
 
-            var has_commonName = settings.ContainsKey("n");
-            var commonName = has_commonName ? settings["n"] : "SelfSignedCertificate";
+            settings.TryGetValue("n", out var commonName);
+            commonName ??= _DefaultName;
 
-            var has_fileName = settings.ContainsKey("f");
-            var fileName = has_fileName ? settings["f"] : "SelfSignedCertificate";
+            settings.TryGetValue("f", out var fileName);
+            fileName ??= _DefaultFileName;
 
-            var has_password = settings.ContainsKey("p");
-            var password = has_password ? settings["p"] : "P@55w0rd";
+            settings.TryGetValue("p", out var password);
+            password ??= _DefaultPassword;
 
             int years;
             var has_years = settings.ContainsKey("y");
             if (has_years)
             {
-                if(!int.TryParse(settings["y"], out years))
-                    years = 5;
+                if (!int.TryParse(settings["y"], out years) || years == 0)
+                    years = _DefaultYears;
             }
             else
-                years = 5;
+                years = _DefaultYears;
 
             var options = new CertificateOptions
             (
@@ -58,5 +82,16 @@ namespace Self_Signed_Certificate
             Console.WriteLine($"{Environment.NewLine}FINISHED");
             Console.ReadKey();
         }
+        static void Help()
+        {
+            Console.WriteLine();
+            Console.WriteLine($"-s Path to directory where certificate will save.{Environment.NewLine}Default path - {_DefaultDirectory}");
+            Console.WriteLine($"-n Name of certificate,{Environment.NewLine}\tDefault certificate name - {_DefaultName}");
+            Console.WriteLine($"-f The file name of certificate,{Environment.NewLine}\tDefault file name - {_DefaultFileName}");
+            Console.WriteLine($"-p Password key to certificate,{Environment.NewLine}\tDefault password - {_DefaultPassword}");
+            Console.WriteLine($"-y How long certificate will work,{Environment.NewLine}\tDefault years - {_DefaultYears}");
+            Console.WriteLine();
+        }
+
     }
 }
