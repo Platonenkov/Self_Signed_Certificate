@@ -60,6 +60,10 @@ namespace Self_Signed_Certificate
 
         #endregion
 
+        public string FullFilePathPFX => Path.Combine(PathToSave, FileNamePFX);
+        public string FileNamePFX => $"{CertificateFileName}.pfx";
+        public string FullFilePathCER => Path.Combine(PathToSave, FileNameCER);
+        public string FileNameCER => $"{CertificateFileName}.cer";
     }
 
     public static class CertificateOptionsExtensions
